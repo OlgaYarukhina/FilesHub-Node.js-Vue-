@@ -2,6 +2,7 @@ import express from 'express';
 import multer from 'multer';
 import path from 'path'; 
 import fs from 'fs'; 
+import cors from 'cors';
 import { fileURLToPath } from 'url';
 
 
@@ -11,19 +12,10 @@ import handleValidationErrors from './validations/handleValidationErrors.js';
 
 const app = express();
 app.use(express.json());
+app.use(cors());
+const upload = multer();
 
 console.log ("1")
-
-app.use((req, res, next) => {
-    if (req.method === 'POST' && req.path === '/file') {
-      req.fileName = req.body.fileName; // Зберігання fileName в req
-      next();
-      console.log ("2")
-    } else {
-      next();
-    }
-  });
-  console.log ("3")
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -31,31 +23,44 @@ const uploadDirectory = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDirectory)){
     fs.mkdirSync(uploadDirectory, { recursive: true });
 }
-console.log ("4")
+console.log ("2")
+
 
 const storage = multer.diskStorage({
     destination: (_, __, cb) => {
         cb(null, uploadDirectory);
     },
     filename: (req, file, cb) => {
-        const customFileName = req.body.fileName;                          //  назву файлу введену користуваче
-        const extension = path.extname(file.originalname);                 // оригінальне розширення файлу
+        const customFileName = req.customFileName; // Використання збереженої назви
+        const extension = path.extname(file.originalname);
         const newFileName = `${customFileName}-${Date.now()}${extension}`;
         cb(null, newFileName);
     },
 });
-console.log ("5")
 
-const upload = multer({ 
+console.log ("3")
+
+const uploadFields = multer({
     storage: storage,
     limits: { fileSize: 1024 * 1024 * 5 }
- });
+}).fields([
+    { name: 'myFile', maxCount: 1 },
+    { name: 'fileName', maxCount: 1 }
+]);
+
+
+app.post('/file', upload.any(), (req, res, next) => {
+    console.log(req.files); // Логування файлів
+    console.log(req.body);  // Логування текстових полів
+    next();
+}, fileUploadValidation, handleValidationErrors, fileControler.upload);
+
 
 app.use(express.json());
 app.use('/uploads', express.static('uploads')); // get запит на отримання статичного файлу
 
 
-app.post('/file', upload.single('myFile'), fileUploadValidation, handleValidationErrors, fileControler.upload);
+//app.post('/file', upload.single('myFile'), fileUploadValidation, handleValidationErrors, fileControler.upload);
 app.get('/files', fileControler.getList); 
 app.delete('/file/:id', fileControler.remove);
 app.patch('/file/:id', fileUploadValidation, handleValidationErrors, fileControler.update);

@@ -5,6 +5,8 @@ folder backend init:
 3. npm install nodemon (щоб не перезапускати сервер)
 4. npm install express-validator
 5. npm install multer
+6. npm install cors
+
 
 backend run:
 npm start

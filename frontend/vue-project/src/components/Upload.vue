@@ -28,7 +28,7 @@
 import RightSideItem from './RightSideItem.vue';
 export default {
   components: {
-RightSideItem
+    RightSideItem
   },
   data() {
     return {
@@ -42,31 +42,35 @@ RightSideItem
       this.imagePreview = URL.createObjectURL(this.file);
     },
     uploadFile() {
-  if (this.file && this.title) {
-    const formData = new FormData();
-    formData.append('myFile', this.file);
-    formData.append('fileName', this.title);
+      if (this.file && this.title) {
+        const formData = new FormData();
+        formData.append('myFile', this.file); // Для файлу
+        formData.append('fileName', this.title); // Для назви файлу
+        
+        for (let [key, value] of formData.entries()) {
+    console.log(key, value);
+}
 
-    console.log(formData)
 
-    fetch('http://localhost:8080/file', {
-      method: 'POST',
-      body: formData
-    })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('Network response was not ok.');
+
+        fetch('http://localhost:8080/file', {
+          method: 'POST',
+          body: formData
+        })
+          .then(response => {
+            if (!response.ok) {
+              throw new Error('Network response was not ok.');
+            }
+            return response.json();
+          })
+          .then(data => {
+            console.log('Successfully uploaded:', data);
+          })
+          .catch((error) => {
+            console.error('Error while uploading file:', error);
+          });
       }
-      return response.json();
-    })
-    .then(data => {
-      console.log('Successfully uploaded:', data);
-    })
-    .catch((error) => {
-      console.error('Error while uploading file:', error);
-    });
-  }
-},
+    },
 
     deleteFile() {
       // Перевіряємо, чи існує URL прев'ю, і якщо так, то видаляємо його
