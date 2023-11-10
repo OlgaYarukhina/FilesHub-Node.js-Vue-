@@ -12,24 +12,39 @@ import handleValidationErrors from './validations/handleValidationErrors.js';
 const app = express();
 app.use(express.json());
 
+console.log ("1")
+
+app.use((req, res, next) => {
+    if (req.method === 'POST' && req.path === '/file') {
+      req.fileName = req.body.fileName; // Зберігання fileName в req
+      next();
+      console.log ("2")
+    } else {
+      next();
+    }
+  });
+  console.log ("3")
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const uploadDirectory = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDirectory)){
     fs.mkdirSync(uploadDirectory, { recursive: true });
 }
+console.log ("4")
 
 const storage = multer.diskStorage({
     destination: (_, __, cb) => {
         cb(null, uploadDirectory);
     },
-    filename: (_, file, cb) => {
-        const customFileName = req.body.filename;                          //  назву файлу введену користуваче
+    filename: (req, file, cb) => {
+        const customFileName = req.body.fileName;                          //  назву файлу введену користуваче
         const extension = path.extname(file.originalname);                 // оригінальне розширення файлу
-        const newFilename = `${customFileName}-${Date.now()}${extension}`;
-        cb(null, newFilename);
+        const newFileName = `${customFileName}-${Date.now()}${extension}`;
+        cb(null, newFileName);
     },
 });
+console.log ("5")
 
 const upload = multer({ 
     storage: storage,
