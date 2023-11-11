@@ -28,15 +28,17 @@ console.log ("2")
 
 const storage = multer.diskStorage({
     destination: (_, __, cb) => {
-        cb(null, uploadDirectory);
+      cb(null, uploadDirectory);
     },
     filename: (req, file, cb) => {
-        const customFileName = req.customFileName; // Використання збереженої назви
-        const extension = path.extname(file.originalname);
-        const newFileName = `${customFileName}-${Date.now()}${extension}`;
-        cb(null, newFileName);
+      const customFileName = req.body.fileName; // Corrected to use req.body.fileName
+      const extension = path.extname(file.originalname);
+      const newFileName = `${customFileName}-${Date.now()}${extension}`;
+      cb(null, newFileName);
     },
-});
+  });
+  
+
 
 console.log ("3")
 
@@ -49,11 +51,11 @@ const uploadFields = multer({
 ]);
 
 
-app.post('/file', upload.any(), (req, res, next) => {
-    console.log(req.files); // Логування файлів
-    console.log(req.body);  // Логування текстових полів
+app.post('/file', uploadFields, (req, res, next) => {
+    console.log(req.files); 
+    console.log(req.body);  
     next();
-}, fileUploadValidation, handleValidationErrors, fileControler.upload);
+}, fileControler.upload);
 
 
 app.use(express.json());
@@ -71,8 +73,3 @@ app.listen(8080, (err) => {
     }
     console.log('Server ok')
 });
-
-
-// app.get('/', (req, res) => {
-//     res.send('Hello Roman');
-// });

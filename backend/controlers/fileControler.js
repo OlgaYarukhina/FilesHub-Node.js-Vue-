@@ -5,19 +5,20 @@ export const upload = async (req, res) => {
             message: req.fileValidationError
         });
     }
+
     if (req.file) {
         res.json({
             success: true,
             message: `Файл ${req.file.filename} успішно завантажено!`,
             fileName: req.file.filename,
-            url: `/uploads/${req.file.newFilename}`
+            url: `/uploads/${req.file.filename}`, // URL remains unchanged
         });
     } else {
-        console.log (err);
+        console.log(err);
         res.status(500).json({
             success: false,
-            message: "Failed to apload file"
-        })
+            message: 'Failed to upload file',
+        });
     }
 };
 

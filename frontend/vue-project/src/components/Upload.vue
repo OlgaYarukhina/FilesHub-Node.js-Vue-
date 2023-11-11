@@ -10,7 +10,6 @@
       <label for="file-upload" class="btn">
         Choose file
       </label>
-      <!-- Справжній вхід файлу, але він прихований -->
       <input ref="fileInput" id="file-upload" type="file" @change="handleFileUpload" required style="display: none;">
       <button class="btn" v-if="title && file" @click.prevent="uploadFile">
         Upload
@@ -44,15 +43,12 @@ export default {
     uploadFile() {
       if (this.file && this.title) {
         const formData = new FormData();
-        formData.append('myFile', this.file); // Для файлу
-        formData.append('fileName', this.title); // Для назви файлу
+        formData.append('myFile', this.file); 
+        formData.append('fileName', this.title); 
         
         for (let [key, value] of formData.entries()) {
     console.log(key, value);
 }
-
-
-
         fetch('http://localhost:8080/file', {
           method: 'POST',
           body: formData
