@@ -1,42 +1,48 @@
 import path from 'path'; 
 import fs from 'fs'; 
-import { uploadFields, uploadDirectory } from '../utils/fileUpload.js';
+import { uploadDirectory } from '../utils/fileUpload.js';
+
 
 export const upload = async (req, res) => {
-        const fileData = req.files['myFile'][0];
-        const customFileName = req.body.fileName;
-        const newFileName = `${customFileName}-${Date.now()}${path.extname(fileData.originalname)}`;
-      
-        // Перейменування файлу на заданий юзером
-        fs.rename(path.join(uploadDirectory, fileData.filename), path.join(uploadDirectory, newFileName), (err) => {
-          if (err) {
-            return res.status(500).send("Error in file renaming");
-          }
-          res.json({ message: "File uploaded and renamed successfully" });
+    try {
+      const fileData = req.files['myFile'] ? req.files['myFile'][0] : null;
+      if (!fileData) {
+        return res.status(400).json({ 
+            success: false, 
+            message: "No file uploaded" 
         });
       }
-    // if (req.fileValidationError) {
-    //     return res.status(500).json({
-    //         success: false,
-    //         message: req.fileValidationError
-    //     });
-    // }
-
-    // if (req.file) {
-    //     res.json({
-    //         success: true,
-    //         message: `Файл ${req.file.filename} успішно завантажено!`,
-    //         fileName: req.file.filename,
-    //         url: `/uploads/${req.file.filename}`, // URL remains unchanged
-    //     });
-    // } else {
-    //     res.status(500).json({
-    //         success: false,
-    //         message: 'Failed to upload file',
-    //     });
-    // }
-
-
+      if (!/^[^:.\/]*$/.test(req.body.fileName) || req.body.fileName.length > 60) {          // Валідація імені файлу, яку задав юзер
+        fs.unlinkSync(fileData.path);                                                       // Якщо не ок, видаляємо
+        return res.status(400).json({ 
+            success: false, 
+            message: 'Invalid file name' 
+        });
+      }
+    
+      const customFileName = req.body.fileName;
+      const newFileName = `${customFileName}:${Date.now()}${path.extname(fileData.originalname)}`;
+      const newPath = path.join(uploadDirectory, newFileName);
+  
+      fs.renameSync(path.join(uploadDirectory, fileData.filename), newPath);                   // Перейменовуємо файл, як задав юзер
+      
+      const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${newFileName}`;          // Абсолютний URL до файлу
+      console.log (fileUrl)
+      return res.json({ 
+        success: true, 
+        message: `File ${newFileName} was uploaded!`, 
+        fileName: newFileName, 
+        url: fileUrl 
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Server error" 
+    });
+    }
+  };
+  
 
 export const remove = async (req, res) => {
     try {
