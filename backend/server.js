@@ -3,13 +3,14 @@ import cors from 'cors';
 
 import * as fileUpload from './utils/fileUpload.js';
 import * as fileControler from './controlers/fileControler.js';
+import { multerErrorHandler } from './utils/multerErrorHandler.js';
 
 const app = express();
 app.use(express.json());
 app.use(cors());
 app.use('/uploads', express.static(fileUpload.uploadDirectory));
 
-app.post('/file', fileUpload.upload, fileControler.upload);
+app.post('/file', multerErrorHandler, fileControler.upload);
 app.get('/files', fileControler.getList); 
 app.delete('/file/:id', fileControler.remove);
 app.patch('/file/:id', fileControler.update);

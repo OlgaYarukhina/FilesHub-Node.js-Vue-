@@ -37,7 +37,7 @@ const fileFilter = (req, file, cb) => {
 
 export const upload = multer({
   storage: storage,
-  limits: { fileSize: 1024 * 1024 * 5 }, // Обмеження розміру файлу
+  limits: { fileSize: 1024 * 1024 * 5 }, 
   fileFilter: fileFilter
 }).fields([
   { name: 'myFile', maxCount: 1 },

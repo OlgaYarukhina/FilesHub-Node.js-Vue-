@@ -2,7 +2,7 @@
   <RightSideItem>
     <form>
       <input v-bind:value="title" @input="title = $event.target.value" class="input" type="text"
-        placeholder="Set file name" name="fileName" required>
+        placeholder="Set file name (.:/ not allowed)" name="fileName" required>
       <br />
       <img v-if="imagePreview" :src="imagePreview" class="preview" />
       <br />
@@ -14,7 +14,7 @@
       <button class="btn" v-if="title && file" @click.prevent="uploadFile">
         Upload
       </button>
-      <button class="btn" v-if="title && file" @click.prevent="deleteFile" type="button">
+      <button class="btn" v-if="title && file" @click.prevent="deletePreview" type="button">
         Cancel
       </button>
     </form>
@@ -24,6 +24,7 @@
 
 
 <script>
+import Swal from 'sweetalert2';
 import RightSideItem from './RightSideItem.vue';
 export default {
   components: {
@@ -43,39 +44,45 @@ export default {
     uploadFile() {
       if (this.file && this.title) {
         const formData = new FormData();
-        formData.append('myFile', this.file); 
-        formData.append('fileName', this.title); 
-        
-        for (let [key, value] of formData.entries()) {
-    console.log(key, value);
-}
+        formData.append('myFile', this.file);
+        formData.append('fileName', this.title);
+
         fetch('http://localhost:8080/file', {
           method: 'POST',
           body: formData
         })
-          .then(response => {
-            if (!response.ok) {
-              throw new Error('Network response was not ok.');
-            }
-            return response.json();
-          })
+          .then(response => response.json())
           .then(data => {
-            console.log('Successfully uploaded:', data);
+            if (data.success) {
+              this.imagePreview = null;
+              this.title = '';
+              Swal.fire({
+                text: 'File has been saved successfully.',
+                icon: 'success',
+                confirmButtonText: 'OK'
+              });
+              this.deletePreview();
+            } else {
+              throw new Error(data.message || 'Upload failed');
+            }
           })
           .catch((error) => {
-            console.error('Error while uploading file:', error);
+            Swal.fire({
+              text: error.toString(),
+              icon: 'error',
+              confirmButtonText: 'OK'
+            });
           });
       }
     },
 
-    deleteFile() {
-      // Перевіряємо, чи існує URL прев'ю, і якщо так, то видаляємо його
-      if (this.imagePreview) {
+    deletePreview() {
+      if (this.imagePreview) {                    // Перевіряємо, чи існує URL прев'ю, і якщо так, то видаляємо його
         URL.revokeObjectURL(this.imagePreview);
-        this.imagePreview = null; // Скидуємо URL прев'ю
+        this.imagePreview = null;                 // Скидуємо URL прев'ю
       }
-      this.file = null; // Скидуємо об'єкт файлу
-      this.$refs.fileInput.value = ''; // Очищуємо вхідний елемент за допомогою refs
+      this.file = null;                           // Скидуємо об'єкт файлу
+      this.$refs.fileInput.value = '';             // Очищуємо вхідний елемент за допомогою refs
     },
   }
 }

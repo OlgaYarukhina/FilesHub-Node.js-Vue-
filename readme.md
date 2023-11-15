@@ -14,6 +14,8 @@ npm run dev
 
 Frontend: Vue
 1. npm create vue@latest
+2. npm install sweetalert2
+
 
 fronend/vue-project run:
 npm install

@@ -1,10 +1,12 @@
 <template>
   <RightSideItem>
-    <div v-for="file in files">
-        <div>{{file.title}}
-        <button v-on:click="uploadFile">Delete </button>
+    <div v-for="file in files" v-if="files.length > 0" >
+      <div v-if="!isfilesLoading">{{ file.title }}
+        <button v-on:click="deleteFile">Delete</button>
+      </div>
+      <div v-else> Laoding ...</div>
     </div>
-    </div>
+    <div v-else> No files have been  upoaded yet</div>
   </RightSideItem>
 </template>
 
@@ -14,29 +16,39 @@ export default {
   components: {
     RightSideItem,
   },
-  props: {
-files: {
-    type: Array,
-    required: true
-}
-  },
-    data () {
-        return {
-            post: {
-                id: null,
-                title: '',
-                file: null
-            },
-            files: [
-                {id: 1, title: "Firs"},
-                {id: 2, title: "Second"}
-            ]
-        }
-    },
-  methods: {
-    uploadFile (){
-      
+  data() {
+    return {
+      files: [],
+      files1: [
+        { id: 1, title: "Firs" },
+        { id: 2, title: "Second" }
+      ],
+      isfilesLoading: false,
     }
+  },
+  methods: {
+    deleteFile() {
+
+    },
+    async getFilesList() {
+  try {
+    this.isfilesLoading = true;
+    const response = await fetch('http://localhost:8080/files?_limit=20');
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    const data = await response.json();
+    this.files = data;
+  } catch (error) {
+    console.log(error);
+  } finally {
+    this.isfilesLoading = false;
   }
+}
+
+  },
+  mounted(){
+      this.getFilesList();
+    }
 }
 </script>
