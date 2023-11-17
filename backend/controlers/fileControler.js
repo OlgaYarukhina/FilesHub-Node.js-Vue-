@@ -1,5 +1,6 @@
 import path from 'path';
 import fs from 'fs';
+import mime from 'mime-types';
 import { uploadDirectory } from '../utils/fileUpload.js';
 
 
@@ -43,39 +44,39 @@ export const upload = async (req, res) => {
   }
 };
 
+
+
 export const download = async (req, res) => {
   try {
-    // Отримуємо назву файлу з параметрів запиту
     const filename = req.params.filename;
     const filepath = path.join(uploadDirectory, filename);
-   
-     // Встановлюємо заголовок Content-Disposition для скачування файлу
-     res.setHeader('Content-Disposition', 'attachment; filename="' + filename + '"');
-     res.sendFile(filepath);
+    const mimeType = mime.lookup(filename) || 'application/octet-stream';
+
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Type', mimeType);
+    res.sendFile(filepath);
   } catch (err) {
     console.log(err);
-    res.status(500).json({
-      message: "Failed to download file"
-    })
+    res.status(500).json({ message: "Failed to download file" });
   }
-}
+};
 
 
 export const remove = async (req, res) => {
   try {
-    const fileId = req.params.id
+    const filename = req.params.filename;
+    const filepath = path.join(uploadDirectory, filename);
+    fs.unlinkSync(filepath);                                     
+      return res.json({success: true});
   } catch (error) {
     console.error(error);
     res.status(500).json({
       message: "Failed to delete file"
     })
   }
-  res.json({
-    success: true,
-  });
 }
 
-export const update = async (req, res) => {
+export const rename = async (req, res) => {
   try {
     const fileId = req.params.id
   } catch (err) {

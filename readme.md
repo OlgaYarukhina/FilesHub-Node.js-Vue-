@@ -6,6 +6,8 @@ folder backend init:
 4. npm install express-validator
 5. npm install multer
 6. npm install cors
+7. npm install mime-types  (для визначення MIME-типу файлу на основі його розширення, так браузер правильно визначитьтип файлу при скачуванні)
+
 
 
 backend run:

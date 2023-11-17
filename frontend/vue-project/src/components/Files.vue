@@ -1,29 +1,18 @@
 <template>
-
-    <table v-if="files.length > 0">
-      <!-- <thead>
-        <tr>
-          <th>File Name</th>
-          <th>File Type</th>
-          <th></th>
-          <th></th>
-          <th></th>
-        </tr>
-      </thead> -->
-      <tbody>
-        <tr v-for="file in files" :key="file.id">
-          <td>{{ file.title }}</td>
-          <td>{{ file.extname }}</td>
-          <td><button class="btn-vw" v-on:click="viewFile(file.fileUrl)">View</button></td>
-          <td><button class="btn-dl" v-on:click="downloadFile(file.title, file.id, file.extname)">Download</button></td>
-          <td><button class="btn-rn" v-on:click="renameFile()">Rename</button></td>
-          <td><button class="btn-dlt" v-on:click="deleteFile()">Delete</button></td>
-        </tr>
-      </tbody>
-    </table>
-    <div v-else>No files have been uploaded yet</div>
-    <div v-if="isfilesLoading">Loading ...</div>
-
+  <table v-if="files.length > 0">
+    <tbody>
+      <tr v-for="file in files" :key="file.id">
+        <td>{{ file.title }}</td>
+        <td>{{ file.extname }}</td>
+        <td><button class="btn-vw" v-on:click="viewFile(file.fileUrl)">View</button></td>
+        <td><button class="btn-dl" v-on:click="downloadFile(file.title, file.id, file.extname)">Download</button></td>
+        <td><button class="btn-rn" v-on:click="renameFile()">Rename</button></td>
+        <td><button class="btn-dlt" v-on:click="deleteFile(file.title, file.id, file.extname)">Delete</button></td>
+      </tr>
+    </tbody>
+  </table>
+  <div v-else>No files have been uploaded yet</div>
+  <div v-if="isfilesLoading">Loading ...</div>
 </template>
 
 
@@ -49,43 +38,38 @@ export default {
         }
         const data = await response.json();
         this.files = data;
-       console.log(this.files)
+        console.log(this.files)
       } catch (error) {
         console.log(error);
       } finally {
         this.isfilesLoading = false;
       }
     },
-
     viewFile(url) {
       console.log(url)
-    window.open(url, '_blank');
-  },
-  async downloadFile(title, id, extname) {
-  try {
-    const filename = `${title}:${id}.${extname}`;
-    const url = `http://localhost:8080/download/${filename}`;
-    console.log(filename)  // My file
-    console.log(url)
-    const response = await fetch(url);
-
-    if (!response.ok) {
-      throw new Error(`Error: ${response.status}`);
-    }
-
-    const blob = await response.blob();
-    const downloadUrl = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = downloadUrl;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    window.URL.revokeObjectURL(downloadUrl);
-    document.body.removeChild(link);
-  } catch (error) {
-    console.error('Download error:', error);
-  }
-},
+      window.open(url, '_blank');
+    },
+    async downloadFile(title, id, extname) {
+      try {
+        const filename = `${title}:${id}.${extname}`;
+        const url = `http://localhost:8080/fileDownload/${filename}`;
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`Error: ${response.status}`);
+        }
+        const blob = await response.blob();
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        window.URL.revokeObjectURL(downloadUrl);
+        document.body.removeChild(link);
+      } catch (error) {
+        console.error('Download error:', error);
+      }
+    },
     async renameFile() {
       try {
         const response = await fetch(`http://localhost:8080/file:${this.id}`);
@@ -100,19 +84,19 @@ export default {
         this.isfilesLoading = false;
       }
     },
-    async deleteFile() {
+    async deleteFile(title, id, extname) {
       try {
-        this.isfilesLoading = true;
-        const response = await fetch(`http://localhost:8080/file:${this.id}`);
+        const filename = `${title}:${id}.${extname}`;
+        const url = `http://localhost:8080/file/${filename}`;
+        const response = await fetch(url, {
+          method: 'DELETE'
+        });
         if (!response.ok) {
-          throw new Error('Network response was not ok');
+          throw new Error(`Error: ${response.status}`);
         }
-        const data = await response.json();
-        this.files = data;
+        await this.getFilesList();
       } catch (error) {
-        console.log(error);
-      } finally {
-        this.isfilesLoading = false;
+        console.error('Delete error:', error);
       }
     }
   },
@@ -139,6 +123,7 @@ td {
 th {
   background-color: #f2f2f2;
 }
+
 .btn-vw {
   background-color: rgb(95, 157, 220);
   color: white;
@@ -149,8 +134,9 @@ th {
 }
 
 .btn-vw:hover {
-  background-color:  rgb(5, 59, 112);
+  background-color: rgb(5, 59, 112);
 }
+
 .btn-dl {
   background-color: hsla(160, 100%, 37%, 1);
   color: white;
@@ -163,6 +149,7 @@ th {
 .btn-dl:hover {
   background-color: rgb(2, 128, 86);
 }
+
 .btn-rn {
   background-color: #b39210;
   color: white;
@@ -175,6 +162,7 @@ th {
 .btn-rn:hover {
   background-color: #7a6304;
 }
+
 .btn-dlt {
   background-color: #510223;
   color: white;
