@@ -43,6 +43,23 @@ export const upload = async (req, res) => {
   }
 };
 
+export const download = async (req, res) => {
+  try {
+    // Отримуємо назву файлу з параметрів запиту
+    const filename = req.params.filename;
+    const filepath = path.join(uploadDirectory, filename);
+   
+     // Встановлюємо заголовок Content-Disposition для скачування файлу
+     res.setHeader('Content-Disposition', 'attachment; filename="' + filename + '"');
+     res.sendFile(filepath);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      message: "Failed to download file"
+    })
+  }
+}
+
 
 export const remove = async (req, res) => {
   try {
