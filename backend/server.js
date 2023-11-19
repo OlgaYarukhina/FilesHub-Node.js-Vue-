@@ -12,8 +12,7 @@ app.use('/uploads', express.static(fileUpload.uploadDirectory));
 
 app.post('/file', multerErrorHandler, fileControler.upload);
 app.get('/files', fileControler.getList); 
-app.get('/fileDownload/:filename', fileControler.download);
-
+app.get('/download/:filename', fileControler.download);
 app.delete('/file/:filename', fileControler.remove);
 app.patch('/file/:filename', fileControler.rename);
 

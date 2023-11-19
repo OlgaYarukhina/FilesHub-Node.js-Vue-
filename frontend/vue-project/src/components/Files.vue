@@ -2,12 +2,21 @@
   <table v-if="files.length > 0">
     <tbody>
       <tr v-for="file in files" :key="file.id">
-        <td>{{ file.title }}</td>
+        <td>
+          <div v-if="editingStates[file.id]?.editing">
+            <input v-model="editingStates[file.id].newName" @keyup.enter="submitRename(file)" type="text">
+            <button @click="submitRename(file)">✓</button>
+            <button @click="cancelRename(file)">✖</button>
+          </div>
+          <div v-else>
+            {{ file.title }}
+          </div>
+        </td>
         <td>{{ file.extname }}</td>
         <td><button class="btn-vw" v-on:click="viewFile(file.fileUrl)">View</button></td>
         <td><button class="btn-dl" v-on:click="downloadFile(file.title, file.id, file.extname)">Download</button></td>
-        <td><button class="btn-rn" v-on:click="renameFile()">Rename</button></td>
-        <td><button class="btn-dlt" v-on:click="deleteFile(file.title, file.id, file.extname)">Delete</button></td>
+        <td><button class="btn-rn" v-on:click="startRename(file)">Rename</button></td>
+        <td><button class="btn-dlt" v-on:click="deleteFile(file)">Delete</button></td>
       </tr>
     </tbody>
   </table>
@@ -17,6 +26,7 @@
 
 
 <script>
+import Swal from 'sweetalert2';
 import RightSideItem from './RightSideItem.vue';
 export default {
   components: {
@@ -26,6 +36,7 @@ export default {
     return {
       files: [],
       isfilesLoading: false,
+      editingStates: {},                  // об'єкт для збереження стану редагування
     }
   },
   methods: {
@@ -52,7 +63,7 @@ export default {
     async downloadFile(title, id, extname) {
       try {
         const filename = `${title}:${id}.${extname}`;
-        const url = `http://localhost:8080/fileDownload/${filename}`;
+        const url = `http://localhost:8080/download/${filename}`;
         const response = await fetch(url);
         if (!response.ok) {
           throw new Error(`Error: ${response.status}`);
@@ -70,23 +81,9 @@ export default {
         console.error('Download error:', error);
       }
     },
-    async renameFile() {
+    async deleteFile(file) {
       try {
-        const response = await fetch(`http://localhost:8080/file:${this.id}`);
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        const data = await response.json();
-        this.files = data;
-      } catch (error) {
-        console.log(error);
-      } finally {
-        this.isfilesLoading = false;
-      }
-    },
-    async deleteFile(title, id, extname) {
-      try {
-        const filename = `${title}:${id}.${extname}`;
+        const filename = `${file.title}:${file.id}.${file.extname}`;
         const url = `http://localhost:8080/file/${filename}`;
         const response = await fetch(url, {
           method: 'DELETE'
@@ -98,7 +95,46 @@ export default {
       } catch (error) {
         console.error('Delete error:', error);
       }
-    }
+    },
+    startRename(file) {
+      // режим редагування для конкретного файлу
+      this.editingStates[file.id] = {                               //$set for vue2
+        editing: true,
+        newName: file.title
+      };
+    },
+
+    async submitRename(file) {
+      if (this.editingStates[file.id].editing) {
+        const updatedName = this.editingStates[file.id].newName;
+        if (!/^[^:.\/]*$/.test(updatedName) || updatedName.length > 30) {
+          Swal.fire({
+            text: 'Invalid file name. .:/ is not allowed and length should be less than 30 characters.',
+            icon: 'error',
+            confirmButtonText: 'OK'
+          });
+          return;
+        }
+        try {
+          const filename = `${file.title}:${file.id}.${file.extname}`;
+          const response = await fetch(`http://localhost:8080/file/${filename}`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ newName: updatedName })
+          });
+          await this.getFilesList();
+        } catch (error) {
+          console.error('Rename error:', error);
+        } finally {
+          this.editingStates[file.id].editing = false;
+        }
+      }
+    },
+    cancelRename(file) {
+      this.editingStates[file.id].editing = false;
+    },
   },
   mounted() {
     this.getFilesList();

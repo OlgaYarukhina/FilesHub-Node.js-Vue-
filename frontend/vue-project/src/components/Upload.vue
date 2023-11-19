@@ -6,7 +6,6 @@
       <br />
       <img v-if="imagePreview" :src="imagePreview" class="preview" />
       <br />
-      <br />
       <label for="file-upload" class="btn">
         Choose file
       </label>
@@ -42,39 +41,61 @@ export default {
       this.imagePreview = URL.createObjectURL(this.file);
     },
     uploadFile() {
-      if (this.file && this.title) {
-        const formData = new FormData();
-        formData.append('myFile', this.file);
-        formData.append('fileName', this.title);
+  if (this.file && this.title) {
+    if (!/^[^:.\/]*$/.test(this.title) || this.title.length > 30) {
+      Swal.fire({
+        text: 'Invalid file name. .:/ is not allowed and length should be less than 30 characters.',
+        icon: 'error',
+        confirmButtonText: 'OK'
+      });
+      return;
+    }
 
-        fetch('http://localhost:8080/file', {
-          method: 'POST',
-          body: formData
+    const formData = new FormData();
+    formData.append('myFile', this.file);
+    formData.append('fileName', this.title);
+
+    try {
+      fetch('http://localhost:8080/file', {
+        method: 'POST',
+        body: formData
+      })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
         })
-          .then(response => response.json())
-          .then(data => {
-            if (data.success) {
-              this.imagePreview = null;
-              this.title = '';
-              Swal.fire({
-                text: 'File has been saved successfully.',
-                icon: 'success',
-                confirmButtonText: 'OK'
-              });
-              this.deletePreview();
-            } else {
-              throw new Error(data.message || 'Upload failed');
-            }
-          })
-          .catch((error) => {
+        .then(data => {
+          if (data.success) {
+            this.imagePreview = null;
+            this.title = '';
             Swal.fire({
-              text: error.toString(),
-              icon: 'error',
+              text: 'File has been saved successfully.',
+              icon: 'success',
               confirmButtonText: 'OK'
             });
+          } else {
+            throw new Error(data.message || 'Upload failed');
+          }
+        })
+        .catch((error) => {
+          Swal.fire({
+            text: error.toString(),
+            icon: 'error',
+            confirmButtonText: 'OK'
           });
-      }
-    },
+        });
+    } catch (error) {
+      Swal.fire({
+        text: error.toString(),
+        icon: 'error',
+        confirmButtonText: 'OK'
+      });
+    }
+  }
+},
+
 
     deletePreview() {
       if (this.imagePreview) {                    // Перевіряємо, чи існує URL прев'ю, і якщо так, то видаляємо його

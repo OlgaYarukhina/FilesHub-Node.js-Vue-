@@ -1,24 +1,31 @@
-Backend: Node.js
-folder backend init:
-1. npm init
-2. npm install express
-3. npm install nodemon (щоб не перезапускати сервер)
-4. npm install express-validator
-5. npm install multer
-6. npm install cors
-7. npm install mime-types  (для визначення MIME-типу файлу на основі його розширення, так браузер правильно визначитьтип файлу при скачуванні)
+# FilesHub
 
+## About
+FilesHub is a project designed to allow users to upload, store, and manage files. It utilizes NodeJS for backend operations and Vue for the frontend interface.
 
+## Technologies
+- NodeJS (v18.17.0)
+- Vue (v3.3.4)
 
-backend run:
-npm start
-npm run dev
+## Getting Started
+Before starting, ensure you have the appropriate versions of NodeJS and Vue installed.
 
-Frontend: Vue
-1. npm create vue@latest
-2. npm install sweetalert2
+### Project Setup
+Run the setup script to install necessary dependencies for both backend and frontend:
 
+```sh
+bash setup.sh
+```
 
-fronend/vue-project run:
-npm install
-npm run dev
+### Running the Application
+
+1. Navigate to the backend directory: 
+```cd backend```
+2. Start the server:
+```npm start```
+3. Open a new terminal window.
+4. Navigate to the frontend directory:
+```cd frontend/vue-project```
+5. Start the Vue development server:
+```npm run dev```
+6. Access the application through your web browser at http://localhost:5173.
