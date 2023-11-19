@@ -4,7 +4,7 @@
       <input v-bind:value="title" @input="title = $event.target.value" class="input" type="text"
         placeholder="Set file name (.:/ not allowed)" name="fileName" required>
       <br />
-      <img v-if="imagePreview" :src="imagePreview" class="preview" />
+      <img v-if="file" :src="imagePreview" class="preview" />
       <br />
       <label for="file-upload" class="btn">
         Choose file
@@ -41,60 +41,54 @@ export default {
       this.imagePreview = URL.createObjectURL(this.file);
     },
     uploadFile() {
-  if (this.file && this.title) {
-    if (!/^[^:.\/]*$/.test(this.title) || this.title.length > 30) {
-      Swal.fire({
-        text: 'Invalid file name. .:/ is not allowed and length should be less than 30 characters.',
-        icon: 'error',
-        confirmButtonText: 'OK'
-      });
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append('myFile', this.file);
-    formData.append('fileName', this.title);
-
-    try {
-      fetch('http://localhost:8080/file', {
-        method: 'POST',
-        body: formData
-      })
-        .then(response => {
-          if (!response.ok) {
-            throw new Error('Network response was not ok');
-          }
-          return response.json();
-        })
-        .then(data => {
-          if (data.success) {
-            this.imagePreview = null;
-            this.title = '';
-            Swal.fire({
-              text: 'File has been saved successfully.',
-              icon: 'success',
-              confirmButtonText: 'OK'
-            });
-          } else {
-            throw new Error(data.message || 'Upload failed');
-          }
-        })
-        .catch((error) => {
+      if (this.file && this.title) {
+        if (!/^[^:.\/]*$/.test(this.title) || this.title.length > 30) {
           Swal.fire({
-            text: error.toString(),
+            text: 'Invalid file name. .:/ is not allowed and length should be less than 30 characters.',
             icon: 'error',
             confirmButtonText: 'OK'
           });
-        });
-    } catch (error) {
-      Swal.fire({
-        text: error.toString(),
-        icon: 'error',
-        confirmButtonText: 'OK'
-      });
-    }
-  }
-},
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append('myFile', this.file);
+        formData.append('fileName', this.title);
+
+
+        fetch('http://localhost:8080/file', {
+          method: 'POST',
+          body: formData
+        })
+          .then(response => {
+            if (!response.ok) {
+              throw new Error('Network response was not ok');
+            }
+            return response.json();
+          })
+          .then(data => {
+            if (data.success) {
+              this.imagePreview = null;
+              this.title = '';
+              Swal.fire({
+                text: data.message,
+                icon: 'success',
+                confirmButtonText: 'OK'
+              });
+            } else {
+              throw new Error(data.message || 'Upload failed');
+            }
+          })
+          .catch((error) => {
+            Swal.fire({
+              text: error.toString(),
+              icon: 'error',
+              confirmButtonText: 'OK'
+            });
+          });
+        this.deletePreview();
+      }
+    },
 
 
     deletePreview() {
@@ -139,8 +133,7 @@ export default {
 
 .preview {
   max-width: 400px;
-  height: auto;
-  /* Щоб зберегти пропорції зображення */
+  height: auto;              /* Щоб зберегти пропорції зображення */
   border: 1px solid #ddd;
   border-radius: 5px;
   margin-bottom: 20px;
